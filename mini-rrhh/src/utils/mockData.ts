@@ -23,6 +23,7 @@ export const mockEmployees: Employee[] = [
         hireDate: "2019-07-01",
         status: "active",
         role: "hr",
+        
     },
     {
         id: 3,
@@ -34,6 +35,7 @@ export const mockEmployees: Employee[] = [
         hireDate: "2021-01-20",
         status: "on_leave",
         role: "employee",
+        
     },
     {
         id: 4,
@@ -45,5 +47,29 @@ export const mockEmployees: Employee[] = [
         hireDate: "2018-05-10",
         status: "active",
         role: "admin",
+
+    },
+    {
+        id: 5,
+        name: "Lucía Ramírez",
+        email: "lucia.ramirez@empresa.com",
+        position: "Analista de Operaciones",
+        department: "Operaciones",
+        salary: 7800,
+        hireDate: "2023-02-10",
+        status: "inactive",
+        role: "employee",
+
+    },
+    {
+        id: 6,
+        name: "Diego Herrera",
+        email: "diego.herrera@empresa.com",
+        position: "Ejecutivo de Ventas",
+        department: "Ventas",
+        salary: 8200,
+        hireDate: "2022-11-05",
+        status: "active",
+        role: "employee",
     },
 ];
