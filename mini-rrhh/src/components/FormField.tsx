@@ -1,21 +1,16 @@
 // src/components/FormField.tsx
-import type { ReactNode, CSSProperties } from 'react';
-
-type FormFieldProps = {
+import type { ReactNode } from "react";
+interface FormFieldProps {
   label: string;
   children: ReactNode;
-  style?: CSSProperties;
-};
-
-function FormField({ label, children, style }: FormFieldProps) {
+  className?: string;
+}
+function FormField({ label, children, className = "" }: FormFieldProps) {
   return (
-    <div style={style}>
-      <label style={{ display: 'block', marginBottom: '6px', color: '#475569', fontSize: '14px', fontWeight: 500 }}>
-        {label}
-      </label>
+    <div className={`flex flex-col gap-1 ${className}`}>
+      <label className="text-xs font-semibold text-slate-600">{label}</label>
       {children}
     </div>
   );
 }
-
 export default FormField;
