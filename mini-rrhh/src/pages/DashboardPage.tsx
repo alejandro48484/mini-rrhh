@@ -1,10 +1,22 @@
 // src/pages/DashboardPage.tsx
+
 import { Link } from "react-router-dom";
 import { mockEmployees } from "../utils/mockData";
+import { useAuthStore } from "../store/authStore";
+
 function DashboardPage() {
+  const userName = useAuthStore((state) => state.user?.name) || "invitado";
+
   const total = mockEmployees.length;
-  const active = mockEmployees.filter((e) => e.status === "active").length;
-  const onLeave = mockEmployees.filter((e) => e.status === "on_leave").length;
+
+  const active = mockEmployees.filter(
+    (e) => e.status === "active"
+  ).length;
+
+  const onLeave = mockEmployees.filter(
+    (e) => e.status === "on_leave"
+  ).length;
+
   const stats = [
     {
       label: "Total empleados",
@@ -12,7 +24,12 @@ function DashboardPage() {
       color: "#dbeafe",
       textColor: "#1e40af",
     },
-    { label: "Activos", value: active, color: "#dcfce7", textColor: "#166534" },
+    {
+      label: "Activos",
+      value: active,
+      color: "#dcfce7",
+      textColor: "#166534",
+    },
     {
       label: "En permiso",
       value: onLeave,
@@ -23,7 +40,24 @@ function DashboardPage() {
 
   return (
     <div style={{ padding: "24px" }}>
-      <h2 style={{ color: "#1e293b", marginBottom: "24px" }}>Dashboard</h2>
+      <h2
+        style={{
+          color: "#1e293b",
+          marginBottom: "8px",
+        }}
+      >
+        Dashboard
+      </h2>
+
+      <p
+        style={{
+          color: "#64748b",
+          marginBottom: "24px",
+        }}
+      >
+        Bienvenido, {userName}
+      </p>
+
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
         {stats.map((stat) => (
           <div
@@ -33,7 +67,7 @@ function DashboardPage() {
               padding: "24px",
               borderRadius: "12px",
             }}
-            className="flex-1 min-w-[160px]  hover:shadow-lg transition-shadow duration-200"
+            className="flex-1 min-w-[160px] hover:shadow-lg transition-shadow duration-200"
           >
             <p
               style={{
@@ -44,6 +78,7 @@ function DashboardPage() {
             >
               {stat.label}
             </p>
+
             <p
               style={{
                 margin: 0,
@@ -76,4 +111,5 @@ function DashboardPage() {
     </div>
   );
 }
+
 export default DashboardPage;

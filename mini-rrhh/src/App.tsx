@@ -1,4 +1,5 @@
 // src/App.tsx
+
 import type { ReactNode } from "react";
 import {
   BrowserRouter,
@@ -8,40 +9,46 @@ import {
   Link,
   useNavigate,
 } from "react-router-dom";
+
 import Header from "./layouts/Header";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import type { User } from "./types";
-import {useState, useEffect} from "react";
+
+import { useAuthStore } from "./store/authStore";
+import { useState, useEffect } from "react";
 
 // Layout con Header para páginas autenticadas
 function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const role = localStorage.getItem("userRole") as User["role"] | null;
-  const name = localStorage.getItem("userName") || "";
-  const user = role
-    ? ({ id: 1, name, email: "", role, token: "" } as User)
-    : undefined;
-  const [showWelcome, setShowWelcome] = useState(true); 
 
-  useEffect(() => {                        
+  // Obtener usuario y logout desde Zustand
+  const { user, logout } = useAuthStore();
+
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setShowWelcome(false);
     }, 5000); // 5 segundos
+
     return () => clearTimeout(timer);
   }, []);
-    
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
+    logout();
     navigate("/login");
   };
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
-      <Header user={user} onLogout={handleLogout} showWelcome={showWelcome} />
+      <Header
+        user={user ?? undefined}
+        onLogout={handleLogout}
+        showWelcome={showWelcome}
+      />
+
       <main>{children}</main>
     </div>
   );
@@ -51,8 +58,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Ruta pública */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
         {/* Rutas protegidas */}
         <Route
           path="/dashboard"
@@ -75,8 +87,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         {/* Redirigir raíz según autenticación */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/"
+          element={<Navigate to="/dashboard" replace />}
+        />
+
         {/* 404 */}
         <Route
           path="*"
@@ -89,13 +106,20 @@ function App() {
                 padding: "80px",
               }}
             >
-              <h2 style={{ color: "#1e293b" }}>404 — Página no encontrada</h2>
-              <Link to="/dashboard">Volver al inicio</Link>
+              <h2 style={{ color: "#1e293b" }}>
+                404 — Página no encontrada
+              </h2>
+
+              <Link to="/dashboard">
+                Volver al inicio
+              </Link>
             </div>
           }
         />
+
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;
