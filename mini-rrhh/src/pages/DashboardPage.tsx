@@ -1,19 +1,25 @@
 // src/pages/DashboardPage.tsx
 
 import { Link } from "react-router-dom";
-import { mockEmployees } from "../utils/mockData";
 import { useAuthStore } from "../store/authStore";
+import { useEmployees } from "../hooks/useEmployees";
 
 function DashboardPage() {
   const userName = useAuthStore((state) => state.user?.name) || "invitado";
 
-  const total = mockEmployees.length;
+  // Mismos datos que EmployeesPage — TanStack Query comparte el cache entre
+  // ambas pantallas, así que esto no dispara una petición nueva si ya se
+  // cargó la lista sin filtros en otra vista.
+  const { data } = useEmployees({});
+  const employees = data?.data || [];
 
-  const active = mockEmployees.filter(
+  const total = employees.length;
+
+  const active = employees.filter(
     (e) => e.status === "active"
   ).length;
 
-  const onLeave = mockEmployees.filter(
+  const onLeave = employees.filter(
     (e) => e.status === "on_leave"
   ).length;
 
