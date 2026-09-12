@@ -1,15 +1,11 @@
 // src/pages/EmployeesPage.tsx
 import { useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Employee, Department, EmployeeStatus, EmployeeRole } from '../types';
 import EmployeeCard from '../components/EmployeeCard';
 import StatsBadge from '../components/StatsBadge';
 import FormField from '../components/FormField';
-import {
-  useEmployees,
-  useCreateEmployee,
-  useUpdateEmployee,
-  useDeleteEmployee,
-} from '../hooks/useEmployees';
+import { useEmployees, useCreateEmployee, useUpdateEmployee, useDeleteEmployee } from '../hooks/useEmployees';
 
 const formFieldClass = 'w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 
@@ -22,11 +18,13 @@ const nextStatus: Record<EmployeeStatus, EmployeeStatus> = {
 
 function EmployeesPage() {
   // Estado de los filtros — esto sigue siendo estado LOCAL (de la UI), no del servidor
+  const navigate = useNavigate();
   const [search, setSearch] = useState<string>('');
   const [selectedDepartment, setSelectedDepartment] = useState<Department | ''>('');
   const [selectedStatus, setSelectedStatus] = useState<EmployeeStatus | ''>('');
 
-  // Lista filtrada: el filtrado ahora lo hace el servidor (json-server) vía los params
+  // Estado del SERVIDOR: la lista de empleados, filtrada. TanStack Query se encarga
+  // de pedirla, cachearla y mantenerla sincronizada — no hay useEffect ni useState local.
   const { data, isLoading: loading, isError, error: queryError } = useEmployees({
     search: search || undefined,
     department: selectedDepartment || undefined,
@@ -34,7 +32,8 @@ function EmployeesPage() {
   });
   const employees = data?.data || [];
 
-  // Lista completa sin filtrar, solo para calcular las estadísticas totales
+  // Segunda query, sin filtros — las estadísticas son sobre el TOTAL de empleados,
+  // no sobre el filtro activo, así que necesitan su propia lista completa cacheada aparte.
   const { data: allData } = useEmployees({});
   const allEmployees = useMemo(() => allData?.data ?? [], [allData]);
   const totalEmployees = allEmployees.length;
@@ -46,7 +45,6 @@ function EmployeesPage() {
   const updateEmployee = useUpdateEmployee();
   const deleteEmployee = useDeleteEmployee();
 
-  // Estado del formulario de creación
   const [showForm, setShowForm] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>('');
@@ -60,9 +58,10 @@ function EmployeesPage() {
   const [newPhone, setNewPhone] = useState<string>('');
   const [newAvatarUrl, setNewAvatarUrl] = useState<string>('');
 
+  // Memoizamos el handler para no recrearlo en cada render
   const handleSelectEmployee = useCallback((employee: Employee) => {
-    alert(`Empleado: ${employee.name}\nCargo: ${employee.position}\nDepartamento: ${employee.department}`);
-  }, []);
+  navigate(`/empleados/${employee.id}`);
+}, [navigate]);
 
   const handleDeleteEmployee = useCallback((id: number) => {
     if (!confirm('¿Estás seguro de eliminar este empleado?')) return;
@@ -87,18 +86,29 @@ function EmployeesPage() {
     }
 
     createEmployee.mutate({
-      name: newName.trim(), email: newEmail.trim(), position: newPosition.trim(),
-      department: newDepartment, salary: Number(newSalary) || 0, hireDate: newHireDate,
-      status: newStatus, role: newRole,
+      name: newName.trim(),
+      email: newEmail.trim(),
+      position: newPosition.trim(),
+      department: newDepartment,
+      salary: Number(newSalary) || 0,
+      hireDate: newHireDate,
+      status: newStatus,
+      role: newRole,
       ...(newPhone.trim() && { phone: newPhone.trim() }),
       ...(newAvatarUrl.trim() && { avatarUrl: newAvatarUrl.trim() }),
     }, {
       onSuccess: () => {
         setFormError(null);
-        setNewName(''); setNewEmail(''); setNewPosition('');
-        setNewDepartment('Tecnología'); setNewSalary(''); setNewHireDate('');
-        setNewStatus('active'); setNewRole('employee');
-        setNewPhone(''); setNewAvatarUrl('');
+        setNewName('');
+        setNewEmail('');
+        setNewPosition('');
+        setNewDepartment('Tecnología');
+        setNewSalary('');
+        setNewHireDate('');
+        setNewStatus('active');
+        setNewRole('employee');
+        setNewPhone('');
+        setNewAvatarUrl('');
         setShowForm(false);
       },
       onError: () => {
@@ -151,13 +161,11 @@ function EmployeesPage() {
       {showForm && (
         <div className="p-4 mb-6 bg-white rounded-lg border border-blue-200">
           <p className="mb-3 font-semibold text-slate-900">Nuevo empleado</p>
-
           {formError && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {formError}
             </div>
           )}
-
           <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3 mb-4">
             <FormField label="Nombre *">
               <input
@@ -276,7 +284,7 @@ function EmployeesPage() {
               {createEmployee.isPending ? 'Guardando...' : 'Guardar'}
             </button>
             <button
-              onClick={() => { setShowForm(false); setFormError(null); }}
+              onClick={() => setShowForm(false)}
               className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg transition-colors"
             >
               Cancelar
@@ -287,7 +295,8 @@ function EmployeesPage() {
 
       {/* Barra de filtros */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 flex flex-wrap items-end gap-3">
-        <FormField label="Buscar" className="flex-1 min-w-55">
+        {/* Búsqueda por texto */}
+        <FormField label="Buscar" className="flex-1 min-w-[220px]">
           <input
             type="text"
             placeholder="Buscar por nombre, email o cargo..."
@@ -297,7 +306,8 @@ function EmployeesPage() {
           />
         </FormField>
 
-        <FormField label="Departamento" className="min-w-45">
+        {/* Filtro por departamento */}
+        <FormField label="Departamento" className="min-w-[180px]">
           <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value as Department | '')}
@@ -310,7 +320,8 @@ function EmployeesPage() {
           </select>
         </FormField>
 
-        <FormField label="Estado" className="min-w-40">
+        {/* Filtro por estado */}
+        <FormField label="Estado" className="min-w-[160px]">
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as EmployeeStatus | '')}
@@ -323,6 +334,7 @@ function EmployeesPage() {
           </select>
         </FormField>
 
+        {/* Botón limpiar filtros */}
         {(search || selectedDepartment || selectedStatus) && (
           <button
             onClick={() => { setSearch(''); setSelectedDepartment(''); setSelectedStatus(''); }}
@@ -341,7 +353,7 @@ function EmployeesPage() {
         </div>
       )}
 
-      {/* Error de carga */}
+      {/* Estado de error */}
       {isError && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
           <p className="text-red-700 font-medium">Error al cargar los empleados</p>

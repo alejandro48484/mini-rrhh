@@ -1,5 +1,4 @@
 // src/App.tsx
-
 import type { ReactNode } from "react";
 import {
   BrowserRouter,
@@ -9,30 +8,25 @@ import {
   Link,
   useNavigate,
 } from "react-router-dom";
-
 import Header from "./layouts/Header";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-import { useAuthStore } from "./store/authStore";
 import { useState, useEffect } from "react";
+import { useAuthStore } from "./store/authStore";
+import EmployeeDetailPage from "./pages/EmployeeDetailPage";
 
 // Layout con Header para páginas autenticadas
 function AppLayout({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
-
-  // Obtener usuario y logout desde Zustand
   const { user, logout } = useAuthStore();
-
+  const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowWelcome(false);
     }, 5000); // 5 segundos
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,7 +34,6 @@ function AppLayout({ children }: { children: ReactNode }) {
     logout();
     navigate("/login");
   };
-
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <Header
@@ -48,7 +41,6 @@ function AppLayout({ children }: { children: ReactNode }) {
         onLogout={handleLogout}
         showWelcome={showWelcome}
       />
-
       <main>{children}</main>
     </div>
   );
@@ -58,13 +50,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* Ruta pública */}
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
-
+        <Route path="/login" element={<LoginPage />} />
         {/* Rutas protegidas */}
         <Route
           path="/dashboard"
@@ -87,13 +74,18 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Redirigir raíz según autenticación */}
         <Route
-          path="/"
-          element={<Navigate to="/dashboard" replace />}
+          path="/empleados/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <EmployeeDetailPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
         />
-
+        {/* Redirigir raíz según autenticación */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         {/* 404 */}
         <Route
           path="*"
@@ -106,20 +98,13 @@ function App() {
                 padding: "80px",
               }}
             >
-              <h2 style={{ color: "#1e293b" }}>
-                404 — Página no encontrada
-              </h2>
-
-              <Link to="/dashboard">
-                Volver al inicio
-              </Link>
+              <h2 style={{ color: "#1e293b" }}>404 — Página no encontrada</h2>
+              <Link to="/dashboard">Volver al inicio</Link>
             </div>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;
