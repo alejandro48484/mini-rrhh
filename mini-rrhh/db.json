@@ -6,11 +6,12 @@
       "email": "ana.garcia@empresa.com",
       "position": "Desarrolladora Frontend",
       "department": "Tecnología",
-      "salary": 8500,
+      "salary": 1,
       "hireDate": "2022-03-15",
       "status": "active",
       "role": "employee",
-      "avatarUrl": "https://i.pravatar.cc/64?img=1"
+      "avatarUrl": "https://i.pravatar.cc/64?img=1",
+      "phone": ""
     },
     {
       "id": "2",
